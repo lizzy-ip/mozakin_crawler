@@ -4,57 +4,57 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.charset.Charset;
-import java.nio.charset.IllegalCharsetNameException;
-import java.nio.charset.UnsupportedCharsetException;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class HttpProtocol {
-	private static final String DEFAULT_ENCODING = "Shift-JIS";
 	private static final Logger log = LogManager.getLogger(HttpProtocol.class);
+	private static final int MAX_RETRY_COUNT = 5;
+	private static final long RETRY_WAIT = 5;
 
-	public static String get(String url) {
-		return getMain(url, null);
+	public static HttpResponse get(String url, HttpQuery query) throws HttpException {
+		return get(query.appendUrl(url));
 	}
 
-	public static String get(String url, String encoding) {
-		return getMain(url, encoding);
-	}
-
-	public static String get(String url, HttpQuery query) {
-		return getMain(query.appendUrl(url), null);
-	}
-
-
-	public static String get(String url, HttpQuery query, String encoding) {
-		return getMain(query.appendUrl(url), encoding);
-	}
-
-	private static String getMain(String urlString, String forceEncoding) {
+	public static HttpResponse get(String urlString) throws HttpException {
+		URL url;
 		try {
-			return getHtml(urlString, forceEncoding);
-		} catch (IOException e) {
-			// TODO 自動生成された catch ブロック
-			e.printStackTrace();
-			return null;
+			url = new URL(urlString);
+			log.info("get url: {}" , urlString);
+
+			for (int retryCount = 0; retryCount < MAX_RETRY_COUNT; retryCount ++) {
+				try {
+					return getUrl(url);
+				} catch (UnknownHostException ex) {
+					log.warn("サーバが見つかりません: {}", ex.getMessage());
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+				Thread.sleep(RETRY_WAIT * 1000);
+			}
+			throw new HttpException("Retry Error.");
+		} catch (MalformedURLException ex) {
+			log.warn("Illigal Url: {}", ex.getMessage());
+			throw new HttpException(ex);
+		} catch (InterruptedException ex) {
+			log.error(ex);
+			throw new HttpException(ex);
+		} finally {
+			log.trace("end");
 		}
 	}
 
 
-	private static String getHtml(String urlString, String forceEncoding) throws IOException {
+	private static HttpResponse getUrl(URL url) throws IOException {
 		log.trace("start");
-		log.info("get url: {}" , urlString);
-
-		HttpResponse response = new HttpResponse();
-
-		URL url = new URL(urlString);
 
 		HttpURLConnection connection = null;
 		try {
@@ -65,13 +65,12 @@ public class HttpProtocol {
 				log.error("error");
 			}
 
-			httpHeader(connection);
-			String encoding = getEncoding(connection, forceEncoding);
+			HttpResponse response = new HttpResponse(connection);
 			response.setHttpContents(getBinary(connection.getInputStream()));
 
-			log.info("Content Length: {}; Actual Size: {}", connection.getContentLength(), response.getLength());
-
-			return toString(response.getHttpContents(), encoding);
+			httpDebugInformation(response.getHeaderField());
+			log.debug("Content Length: {}; Actual Size: {}", connection.getContentLength(), response.getLength());
+			return response;
 		} finally {
 			if (connection != null) {
 				connection.disconnect();
@@ -80,61 +79,13 @@ public class HttpProtocol {
 		}
 	}
 
-	private static void httpHeader(HttpURLConnection connection) {
+	private static void httpDebugInformation(Map<String, List<String>> headerField) {
 		if (!log.isDebugEnabled()) {
 			return;
 		}
-		Map<String, List<String>> headerField = connection.getHeaderFields();
+
 		for (Map.Entry<String, List<String>>  header : headerField.entrySet()) {
 			log.debug("header - {}: {};", header.getKey(), header.getValue());
-
-		}
-	}
-
-	private static String getEncoding(HttpURLConnection connection, String forceEncoding) {
-		String encoding;
-
-		if (forceEncoding == null) {
-			encoding = connection.getContentEncoding();
-			if (encoding == null) {
-				encoding = DEFAULT_ENCODING;
-				log.debug("Encoding is none. Use Default Encoding: {}.", encoding);
-			} else {
-				log.debug("Use Contents Encoding: {}.", encoding);
-			}
-		} else {
-			encoding = forceEncoding;
-			log.debug("Use Force Encoding: {}", encoding);
-		}
-		return encoding;
-	}
-
-	/**
-	 * エンコードに関するエラーはここで回復される。
-	 * @param htmlContents
-	 * @param encoding
-	 * @return
-	 */
-	private static String toString(byte [] htmlContents, String encoding) {
-		String assertString = null;
-		try {
-			assertString = new String(htmlContents, Charset.forName(DEFAULT_ENCODING));
-			Pattern charset = Pattern.compile("charset=([^\" ]+)");
-
-			Matcher matcher = charset.matcher(assertString);
-			if (matcher.find()) {
-				String htmlEncoding = matcher.group(1);
-				log.debug("html charset: {}.", htmlEncoding);
-				return new String(htmlContents, Charset.forName(htmlEncoding));
-			} else {
-				return new String(htmlContents, Charset.forName(encoding));
-			}
-		} catch (UnsupportedCharsetException ex) {
-			log.warn("Unsupported CharsetName - '{}'", ex.getMessage());
-			return assertString;
-		} catch (IllegalCharsetNameException ex) {
-			log.warn("Illigal CharsetName.");
-			return assertString;
 		}
 	}
 
@@ -153,27 +104,6 @@ public class HttpProtocol {
 		} finally {
 			byteOutputStream.close();
 			inputStream.close();
-		}
-	}
-
-	public static byte[] getBinary(String urlString) throws IOException {
-		URL url = new URL(urlString);
-		InputStream in = url.openStream();
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-		try {
-			byte[] buf = new byte[1024];
-			int len = 0;
-
-			while ((len = in.read(buf)) > 0) {
-				out.write(buf, 0, len);
-			}
-
-			out.flush();
-			return out.toByteArray();
-		} finally {
-			out.close();
-			in.close();
 		}
 	}
 }
