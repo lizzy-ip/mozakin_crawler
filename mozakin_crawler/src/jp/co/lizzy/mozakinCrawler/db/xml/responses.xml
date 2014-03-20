@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="jp.co.lizzy.mozakinCrawler.db.mapper.MapperResponse">
+	<resultMap id="ResponseResult" type="jp.co.lizzy.mozakinCrawler.entity.BBSMessage">
+		<id property="threadId" column="thread_id" />
+		<result property="responseId" column="response_id" />
+		<result property="contributorName" column="contributor_name" />
+		<result property="contributorId" column="contributor_id" />
+		<result property="contributeDate" column="contribute_date" />
+		<result property="message" column="message" />
+		<result property="messageColor" column="message_color" />
+		<result property="imageServer" column="image_server" />
+		<result property="imageId" column="image_id" />
+		<result property="movieId" column="movie_id" />
+	</resultMap>
+
+	<insert id="insert"
+		parameterType="jp.co.lizzy.mozakinCrawler.entity.BBSMessage">
+		INSERT INTO responses
+			(thread_id
+			, response_id
+			, contributor_name
+			, contributor_id
+			, contribute_date
+			, message
+			, message_color
+			, image_server
+			, image_id
+			, movie_id
+			)
+		VALUES
+			(#{threadId}
+			, #{responseId}
+			, #{contributorName}
+			, #{contributorId}
+			, #{contributeDate}
+			, #{message}
+			, #{messageColor}
+			, #{imageServer}
+			, #{imageId}
+			, #{movieId}
+			);
+	</insert>
+
+	<select id="isExist"
+		parameterType="jp.co.lizzy.mozakinCrawler.entity.BBSMessage"
+		resultType="boolean">
+		SELECT (COUNT(thread_id) > 0) AS is_exist
+			FROM responses
+			WHERE thread_id = #{threadId}
+				AND response_id = #{responseId}
+				AND contributor_name = #{contributorName}
+		;
+	</select>
+</mapper>

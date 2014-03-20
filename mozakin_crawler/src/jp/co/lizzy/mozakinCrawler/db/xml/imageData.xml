@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="jp.co.lizzy.mozakinCrawler.db.mapper.MapperImageData">
+	<resultMap type="jp.co.lizzy.mozakinCrawler.db.dao.ImageData" id="imageDataResult">
+		<result property="threadId" column="thread_id" />
+		<result property="responseId" column="response_id" />
+		<result property="imageServer" column="image_server" />
+		<result property="imageId" column="image_id" />
+		<result property="fileSize" column="file_size" />
+		<result property="rawData" column="raw_data" />
+	</resultMap>
+
+	<insert id="insert"
+		parameterType="jp.co.lizzy.mozakinCrawler.db.dao.ImageData">
+		INSERT INTO image_data(
+			thread_id
+			, response_id
+			, image_server
+			, image_id
+			, file_size
+			, raw_data
+		) VALUES (
+			#{threadId}
+			, #{responseId}
+			, #{imageServer}
+			, #{imageId}
+			, #{fileSize}
+			, #{rawData, jdbcType=BLOB}
+		);
+	</insert>
+
+	<select id="isExist"
+		parameterType="jp.co.lizzy.mozakinCrawler.db.dao.ImageData"
+		resultType="boolean">
+		SELECT (COUNT(thread_id) > 0) AS is_exist
+			FROM image_data
+			WHERE thread_id = #{threadId}
+				AND response_id = #{responseId}
+				AND image_id = #{imageId}
+		;
+	</select>
+</mapper>

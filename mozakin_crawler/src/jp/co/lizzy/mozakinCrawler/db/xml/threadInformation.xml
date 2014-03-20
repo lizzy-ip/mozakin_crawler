@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="jp.co.lizzy.mozakinCrawler.db.mapper.MapperThreadInformation">
+	<resultMap id="ThreadInformationResult" type="jp.co.lizzy.mozakinCrawler.entity.ThreadInformation">
+		<id property="threadId" column="thread_id" />
+		<result property="threadOwner" column="owner_name" />
+		<result property="threadOwnerId" column="owner_id" />
+		<result property="threadCreateDate" column="thread_create_date" />
+		<result property="message" column="message" />
+		<result property="messageColor" column="message_color" />
+		<result property="numberOfResponses" column="number_of_responses" />
+		<result property="numberOfPages" column="number_of_pages" />
+		<result property="lastResponseId" column="last_response_id" />
+		<result property="imageServer" column="image_server" />
+		<result property="imageId" column="image_id" />
+	</resultMap>
+
+	<select id="existThreadId"
+		parameterType="int"
+		resultType="boolean">
+		SELECT (COUNT(thread_id) > 0) AS is_exist
+			FROM thread_information
+			WHERE thread_id = #{threadId};
+	</select>
+
+	<select id="findByThreadId"
+		parameterType="int"
+		resultType="jp.co.lizzy.mozakinCrawler.entity.ThreadInformation"
+		resultMap="ThreadInformationResult">
+		SELECT *
+			FROM thread_information
+			WHERE thread_id = #{threadId};
+	</select>
+
+	<select id="findUpdateThread"
+		resultType="jp.co.lizzy.mozakinCrawler.entity.ThreadInformation"
+		resultMap="ThreadInformationResult">
+		SELECT *
+			FROM thread_information
+			WHERE is_update = true;
+	</select>
+
+	<insert id="insert"
+		parameterType="jp.co.lizzy.mozakinCrawler.entity.ThreadInformation">
+		INSERT INTO thread_information
+			(thread_id
+			, owner_name
+			, owner_id
+			, thread_create_date
+			, message
+			, message_color
+			, number_of_responses
+			, number_of_pages
+			, last_response_id
+			, image_server
+			, image_id
+			, create_date
+			, update_date
+			, is_update
+			)
+		VALUES
+			(#{threadId}
+			, #{threadOwner}
+			, #{threadOwnerId}
+			, #{threadCreateDate}
+			, #{message}
+			, #{messageColor}
+			, #{numberOfResponses}
+			, #{numberOfPages}
+			, #{lastResponseId}
+			, #{imageServer}
+			, #{imageId}
+			, now()
+			, now()
+			, true
+			);
+	</insert>
+
+	<update id="update"
+		parameterType="jp.co.lizzy.mozakinCrawler.entity.ThreadInformation">
+		UPDATE thread_information
+			SET
+				number_of_responses = #{numberOfResponses}
+				, number_of_pages = #{numberOfPages}
+				, last_response_id = #{lastResponseId}
+				, update_date = now()
+				, is_update = true
+			WHERE thread_id =#{threadId}
+		;
+	</update>
+
+	<update id="toReaded"
+		parameterType="int">
+		UPDATE thread_information
+			SET is_update = false
+			WHERE thread_id =#{threadId}
+		;
+	</update>
+</mapper>
