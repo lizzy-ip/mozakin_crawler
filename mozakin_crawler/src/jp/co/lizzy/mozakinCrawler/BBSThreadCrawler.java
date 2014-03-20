@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import jp.co.lizzy.common.ElapsedTime;
-import jp.co.lizzy.common.HttpProtocol;
-import jp.co.lizzy.common.HttpQuery;
 import jp.co.lizzy.common.UnixTime;
+import jp.co.lizzy.common.http.HttpProtocol;
+import jp.co.lizzy.common.http.HttpQuery;
 import jp.co.lizzy.mozakinCrawler.db.model.ModelResponse;
 import jp.co.lizzy.mozakinCrawler.entity.BBSMessage;
 import jp.co.lizzy.mozakinCrawler.entity.BBSThread;

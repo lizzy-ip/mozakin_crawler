@@ -1,8 +1,8 @@
 package jp.co.lizzy.mozakinCrawlerTest;
 
-import jp.co.lizzy.common.HttpProtocol;
-import jp.co.lizzy.common.HttpQuery;
 import jp.co.lizzy.common.UnixTime;
+import jp.co.lizzy.common.http.HttpProtocol;
+import jp.co.lizzy.common.http.HttpQuery;
 
 import org.junit.After;
 import org.junit.AfterClass;

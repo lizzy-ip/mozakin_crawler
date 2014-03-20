@@ -6,8 +6,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import jp.co.lizzy.common.HttpProtocol;
-import jp.co.lizzy.common.HttpQuery;
+import jp.co.lizzy.common.http.HttpProtocol;
+import jp.co.lizzy.common.http.HttpQuery;
 import jp.co.lizzy.mozakinCrawler.Const;
 import jp.co.lizzy.mozakinCrawler.db.dao.ImageData;
 import jp.co.lizzy.mozakinCrawler.db.model.ModelImageData;

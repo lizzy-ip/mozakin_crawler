@@ -1,4 +1,4 @@
-package jp.co.lizzy.common;
+package jp.co.lizzy.common.http;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

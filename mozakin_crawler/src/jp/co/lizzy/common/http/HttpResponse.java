@@ -1,4 +1,4 @@
-package jp.co.lizzy.common;
+package jp.co.lizzy.common.http;
 
 public class HttpResponse {
 	/** httpのコンテンツ情報 */
